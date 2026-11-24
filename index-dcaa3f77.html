@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>مسجل أوزان العنبر</title>
+<style>
+:root{--bg:#000;--fg:#d9776f;--accent:#b3261e;--card:#140808;--line:#3a1512;--onacc:#000;--ok:#7a2a25}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Noto Naskh Arabic","Noto Sans Arabic","Droid Arabic Naskh",Tahoma,Arial,sans-serif;font-size:18px;line-height:1.5}
+body{padding-bottom:calc(190px + env(safe-area-inset-bottom));min-height:100vh}
+button{font-family:inherit;font-size:20px;color:var(--fg);background:var(--card);border:2px solid var(--line);border-radius:16px;min-height:56px;padding:0 14px;cursor:pointer}
+button:active{filter:brightness(1.5)}
+.top{padding:10px 12px 6px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bar h1{font-size:20px;margin:0}
+.bar button{min-height:44px;font-size:16px;border-radius:12px}
+.count{text-align:center;font-size:76px;font-weight:700;line-height:1.1;color:var(--accent)}
+.count small{font-size:34px;color:var(--fg);opacity:.8}
+.num{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.prog{height:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.prog>div{height:100%;width:0;background:var(--accent);transition:width .2s;margin-right:0;margin-left:auto}
+.done .count{color:#4cd37b}.done .prog>div{background:#4cd37b}
+.donebadge{display:none;text-align:center;font-size:30px;font-weight:700;color:#4cd37b}
+.done .donebadge{display:block}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center;padding:4px 2px}
+.stat b{display:block;font-size:22px;color:var(--accent)}
+.stat span{font-size:13px;opacity:.9}
+#live{min-height:30px;padding:4px 12px;font-size:17px;opacity:.85}
+#ask{display:none;margin:4px 12px;padding:10px;border-radius:12px;background:#33290a;border:2px solid #f0b400;color:#fff;font-size:18px;text-align:center}#ask .ab{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}#ask button{min-height:48px;font-size:20px;padding:0 14px;border-radius:12px;flex:1}
+#alert{display:none;margin:4px 12px;padding:10px;border-radius:12px;background:#b00020;color:#fff;font-size:22px;font-weight:700;text-align:center}
+#msg{display:none;margin:6px 12px;padding:12px;border-radius:12px;border:2px solid #e0a000;background:#2a2000;color:#ffd666;font-size:18px}
+.light #msg{background:#fff3cd;color:#5a4300}
+.row{display:flex;align-items:center;gap:8px;margin:6px 12px;padding:6px 10px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.row .w{font-size:30px;font-weight:700;min-width:84px;color:var(--accent)}
+.row .t{flex:1;display:flex;flex-wrap:wrap;gap:0 2px;font-size:17px;align-items:center}
+.row .c{font-size:26px;font-weight:700;min-width:40px;text-align:center}
+.row button{width:62px;min-width:62px;height:58px;font-size:34px;padding:0;line-height:1}
+.empty{text-align:center;opacity:.7;padding:30px 16px}
+.dock{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));z-index:6}
+#go{width:100%;min-height:76px;font-size:28px;font-weight:700;background:var(--accent);color:var(--onacc);border-color:var(--accent)}
+#go.on{background:var(--card);color:var(--accent);border:3px solid var(--accent)}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.acts button{font-size:16px;padding:0 2px;min-height:52px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:20;align-items:center;justify-content:center;padding:14px}
+.modal.show{display:flex}
+.box{background:var(--bg);border:2px solid var(--accent);border-radius:18px;padding:16px;width:100%;max-width:440px;max-height:92vh;overflow:auto}
+.box h2{margin:0 0 10px;font-size:22px;color:var(--accent)}
+.box label{display:block;margin:8px 0 2px;font-size:16px}
+.box input{width:100%;font-size:24px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);font-family:inherit;direction:ltr;text-align:right}
+.box .btns{display:flex;gap:8px;margin-top:14px}.box .btns button{flex:1}
+.pri{background:var(--accent)!important;color:var(--onacc)!important;border-color:var(--accent)!important}
+.sw{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sw button{min-height:64px;font-size:18px;border-width:3px}
+.sw button.sel{outline:3px solid #fff;outline-offset:2px}
+.light .sw button.sel{outline-color:#000}
+input[type=color]{height:56px;padding:2px;direction:ltr}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--onacc);padding:8px 18px;border-radius:20px;z-index:30;display:none;font-size:18px}
+
+.tas{display:none;position:fixed;inset:0;background:var(--bg);z-index:25;flex-direction:column}
+.tas.show{display:flex}
+.tas .hd{padding:10px 12px;border-bottom:1px solid var(--line)}
+.tas .hd h2{margin:0 0 6px;font-size:22px;color:var(--accent)}
+.tas .rg{display:flex;gap:8px;align-items:flex-end}
+.tas .rg div{flex:1}.tas .rg label{font-size:14px;display:block}
+.tas .rg input{width:100%;font-size:22px;padding:6px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);direction:ltr;text-align:right;font-family:inherit}
+.tas .tot{margin-top:6px;font-size:18px}
+.tas .bd{flex:1;min-height:0;overflow:hidden;padding:6px;display:grid;gap:5px;direction:rtl;grid-auto-flow:column}
+.tcell{position:relative;background:var(--card);border:2px solid var(--line);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;min-width:0;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;line-height:1.05}
+.tcell .w{font-size:15px;color:var(--hc,var(--accent));font-weight:700}
+.tcell .c{font-size:22px;padding-bottom:4px;font-weight:700}
+.tcell.on{background:var(--accent);border-color:var(--accent)}
+.tcell.on .w,.tcell.on .c{color:var(--onacc)}
+.tcell:active{transform:scale(.95)}
+.tcell.hun{background:var(--hf);border-color:var(--hf)}.tcell.hun .w,.tcell.hun .c{color:#111}.tcell.hun.on{background:var(--hf);border-color:#fff;box-shadow:inset 0 0 0 2px #fff}.tcell.hun.on .w,.tcell.hun.on .c{color:#111}.tcell.hun .mn{background:rgba(0,0,0,.45)}
+.tcell .mn{position:absolute;bottom:0;left:0;width:26px;height:24px;min-height:0;padding:0;font-size:16px;line-height:1;border-radius:0 8px 0 10px;background:rgba(0,0,0,.35);color:#fff;border:0}
+.tas .hd{padding:6px 10px}.tas .hd h2{display:none}
+.tas .rg label{font-size:12px}.tas .rg input{font-size:18px;padding:3px 6px}.tas .tot{margin-top:3px;font-size:15px}
+.tas .ft{display:flex;gap:8px;padding:6px 10px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.tas .ft button{flex:1;min-height:56px;font-size:24px;font-weight:700}
+.sumr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:22px}
+.sumr b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="top" id="top">
+  <div class="bar"><h1>مسجل أوزان العنبر</h1><span><button id="bTas" class="pri">شاشة العدّ</button> <button id="bTheme">الألوان</button> <button id="bSet">الإعدادات</button></span></div>
+  <div class="count"><span class="num" id="cNow">0</span> <small>من <span class="num" id="cTarget">0</span></small></div>
+  <div class="donebadge">اكتمل ✓</div>
+  <div class="prog"><div id="pbar"></div></div>
+  <div class="stats">
+    <div class="stat"><b class="num" id="sAvg">-</b><span>المتوسط</span></div>
+    <div class="stat"><b class="num" id="sUni">-</b><span>التجانس ±١٠٪</span></div>
+    <div class="stat"><b class="num" id="sCv">-</b><span>معامل الاختلاف</span></div>
+    <div class="stat"><b class="num" id="sRem">0</b><span>المتبقي</span></div>
+  </div>
+</div>
+<div style="padding:4px 12px"><button id="mode" style="min-height:38px;font-size:15px;border-radius:20px">طريقة التعرف: تلقائي</button></div><div id="msg"></div>
+<div id="alert"></div><div id="ask"></div>
+<div id="live"></div>
+<div id="list"></div>
+
+<div class="dock">
+  <button id="go">ابدأ الاستماع</button>
+  <div class="acts">
+    <button id="bUndo">تراجع</button><button id="bAdd">إضافة وزن</button><button id="bCopy">نسخ النتيجة</button><button id="bReset">تصفير</button>
+  </div>
+</div>
+
+<div class="modal" id="mSet"><div class="box"><h2>الإعدادات</h2>
+  <label>أقل وزن</label><input id="iMin" type="number" inputmode="numeric">
+  <label>أعلى وزن</label><input id="iMax" type="number" inputmode="numeric">
+  <label>الخطوة</label><input id="iStep" type="number" inputmode="numeric">
+  <label>العدد المطلوب</label><input id="iTarget" type="number" inputmode="numeric">
+  <div class="btns"><button id="setCancel">إلغاء</button><button class="pri" id="setOk">حفظ</button></div></div></div>
+
+<div class="modal" id="mAdd"><div class="box"><h2>إضافة وزن بالكتابة</h2>
+  <label>الوزن</label><input id="iAdd" type="number" inputmode="numeric">
+  <div class="btns"><button id="addCancel">إلغاء</button><button class="pri" id="addOk">إضافة</button></div></div></div>
+
+<div class="modal" id="mReset"><div class="box"><h2>تصفير كل الأوزان؟</h2><p>هتتمسح كل الأوزان المسجلة. الإعدادات والألوان هتفضل زي ما هي.</p>
+  <div class="btns"><button id="resCancel">لا، رجوع</button><button class="pri" id="resOk">أيوه، صفّر</button></div></div></div>
+
+<div class="modal" id="mTheme"><div class="box"><h2>الألوان</h2>
+  <div class="sw" id="swatches"></div>
+  <label>لون التمييز بنفسك</label><input id="iColor" type="color" value="#b3261e">
+  <div class="btns"><button class="pri" id="themeOk">تم</button></div></div></div>
+
+<div class="tas" id="tas">
+  <div class="hd"><h2>شاشة العدّ بالسبحة</h2>
+    <div class="rg"><div><label>من وزن</label><input id="tFrom" type="number" inputmode="numeric"></div><div><label>إلى وزن</label><input id="tTo" type="number" inputmode="numeric"></div></div>
+    <div class="tot">المجموع: <b class="num" id="tTot">0</b> من <span class="num" id="tTgt">0</span></div></div>
+  <div class="bd" id="tBody"></div>
+  <div class="ft"><button id="tBack">رجوع</button><button class="pri" id="tDone">تم</button></div>
+</div>
+<div class="modal" id="mSum"><div class="box"><h2>النتيجة</h2><div id="sumBody"></div>
+  <div class="btns"><button class="pri" id="sumOk">تمام</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*CORE*/
+var WORDS={};
+(function(){
+  function add(v,list){list.split(' ').forEach(function(w){WORDS[w]=v;});}
+  add(1,'واحد وحده');add(2,'اتنين اثنين تنين اثنان اتنان');add(3,'تلاته ثلاثه تلات ثلاث');
+  add(4,'اربعه اربع');add(5,'خمسه خمس');add(6,'سته ست');add(7,'سبعه سبع');
+  add(8,'تمانيه ثمانيه تمان ثمان تمنيه');add(9,'تسعه تسع');add(10,'عشره عشر');
+  add(11,'احداشر حداشر احدعشر');add(12,'اتناشر اثناشر اثنعشر');add(13,'تلتاشر تلاتاشر ثلاثةعشر');
+  add(14,'اربعتاشر');add(15,'خمستاشر');add(16,'ستاشر');add(17,'سبعتاشر');add(18,'تمنتاشر تمانتاشر');add(19,'تسعتاشر');
+  add(20,'عشرين عشرون');add(30,'تلاتين ثلاثين');add(40,'اربعين');add(50,'خمسين');add(60,'ستين');add(70,'سبعين');add(80,'تمانين ثمانين');add(90,'تسعين');
+  add(100,'ميه مايه مئه ميت مائه');add(200,'متين ميتن ميتين مئتين مايتين ميتان');add(300,'تلتميه تلاتميه ثلاثميه ثلاثمئه تلتمايه تلاتمايه');
+  add(400,'ربعميه اربعميه ربعمايه اربعمايه اربعمئه');add(500,'خمسميه خمسمايه خمسمئه');add(600,'ستميه ستمايه ستمئه');
+  add(700,'سبعميه سبعمايه سبعمئه');add(800,'تمنميه تمانميه تمنمايه تمانمايه ثمانميه ثمانمئه');add(900,'تسعميه تسعمايه تسعمئه');
+  add(1000,'كيلو كيلوا كيلوجرام كيلوغرام كيلوا الف الفا');add(2000,'الفين');
+  add(500.5,'نص نصف');
+})();
+function normText(s){
+  s=String(s||'');
+  s=s.replace(/[\u0660-\u0669]/g,function(d){return d.charCodeAt(0)-0x660;});
+  s=s.replace(/[\u06F0-\u06F9]/g,function(d){return d.charCodeAt(0)-0x6F0;});
+  s=s.replace(/[\u064B-\u065F\u0670\u0640]/g,'');
+  s=s.replace(/[\u0623\u0625\u0622\u0671]/g,'\u0627').replace(/\u0629/g,'\u0647').replace(/\u0649/g,'\u064A');
+  s=s.replace(/[^\u0621-\u064A0-9\s]/g,' ');
+  return s.replace(/\s+/g,' ').trim();
+}
+function lowP(v){return v%10?1:(v%100?2:(v%1000?3:4));}
+function highP(v){return v>=1000?4:(v>=100?3:(v>=10?2:1));}
+function lookup(t){
+  if(/^[0-9]+$/.test(t)){return {v:parseInt(t,10),kind:'d'};}
+  if(WORDS.hasOwnProperty(t)){var v=WORDS[t];
+    if(v===500.5)return {v:500,kind:'half'};
+    return {v:v,kind:(v>=100&&v<1000)?'h':(v>=20&&v<100?'ten':'w'),isMia:(v===100)};}
+  return null;
+}
+function parseNumbers(text){
+  var toks=normText(text).split(' '),res=[],cur=null,and=false;
+  function flush(){if(cur){res.push(cur.v);cur=null;}}
+  for(var i=0;i<toks.length;i++){
+    var t=toks[i];if(!t)continue;
+    if(t==='\u0648'){and=true;continue;}
+    var hasAnd=and;and=false;
+    var tk=lookup(t);
+    if(!tk&&t.charAt(0)==='\u0648'&&t.length>1){var r=lookup(t.slice(1));if(r){tk=r;hasAnd=true;}}
+    if(!tk){flush();continue;}
+    if(cur&&cur.v===1&&tk.v===1000&&!hasAnd){cur=null;}
+    if(cur){
+      var ok=false;
+      if(hasAnd&&highP(tk.v)<lowP(cur.v)){cur.v+=tk.v;ok=true;}
+      else if(hasAnd&&cur.v>=1&&cur.v<=9&&cur.kind==='w'&&tk.kind==='ten'){cur.v+=tk.v;ok=true;}
+      else if(hasAnd&&cur.v>=101&&cur.v%100>=1&&cur.v%100<=9&&tk.kind==='ten'){cur.v+=tk.v;ok=true;}
+      else if(!hasAnd&&cur.kind==='w'&&cur.v>=1000&&cur.v%1000===0&&tk.v<1000&&tk.v>0&&(tk.kind==='h'||tk.kind==='ten'||tk.kind==='d')){cur.v+=tk.v;ok=true;}
+      else if(!hasAnd&&cur.v>=2&&cur.v<=9&&cur.kind==='w'&&tk.isMia){cur.v*=100;cur.kind='h';ok=true;}
+      if(ok){continue;}
+      flush();
+    }
+    if(tk.kind==='half')continue;
+    cur={v:tk.v,kind:tk.kind};
+  }
+  flush();
+  return res;
+}
+function inTable(v,s){return Number.isInteger(v)&&v>=s.min&&v<=s.max&&((v-s.min)%s.step===0);}
+function calcStats(counts,target){
+  var n=0,sum=0,k;
+  for(k in counts){var c=counts[k];n+=c;sum+=(+k)*c;}
+  var out={n:n,avg:null,uni:null,cv:null,rem:Math.max(0,target-n)};
+  if(n>0){
+    var m=sum/n,ss=0,inb=0;
+    for(k in counts){var c2=counts[k],w=+k;ss+=c2*(w-m)*(w-m);if(Math.abs(w-m)<=0.1*m)inb+=c2;}
+    out.avg=m;out.uni=inb/n*100;
+    out.cv=n>1?Math.sqrt(ss/(n-1))/m*100:0;
+  }
+  return out;
+}
+/*ENDCORE*/
+
+(function(){
+var KEY='weighrec.v1';
+var DEF={settings:{min:100,max:1100,step:20,target:100},counts:{},hist:[],theme:'red',accent:null};
+var st;
+try{st=JSON.parse(localStorage.getItem(KEY));}catch(e){st=null;}
+if(!st||!st.settings)st=JSON.parse(JSON.stringify(DEF));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+function $(id){return document.getElementById(id);}
+var THEMES={
+ red:{n:'أحمر هادي (للعنبر المظلم)',bg:'#000',fg:'#d9776f',accent:'#b3261e',card:'#140808',line:'#3a1512',onacc:'#000'},
+ green:{n:'أخضر',bg:'#000',fg:'#6fbf7a',accent:'#2e9a4a',card:'#07140a',line:'#143a1b',onacc:'#000'},
+ yellow:{n:'أصفر',bg:'#000',fg:'#d6b64a',accent:'#c9a227',card:'#141104',line:'#3a3212',onacc:'#000'},
+ white:{n:'أبيض على أسود',bg:'#000',fg:'#f0f0f0',accent:'#ffffff',card:'#121212',line:'#444',onacc:'#000'},
+ light:{n:'فاتح للنهار',bg:'#f6f3ec',fg:'#222',accent:'#1b6e3a',card:'#fff',line:'#cfc8b8',onacc:'#fff'},
+ custom:{n:'لون من اختيارك',bg:'#000',fg:'#ddd',accent:'#3b82f6',card:'#111',line:'#333',onacc:'#000'}
+};
+function applyTheme(){
+  var t=THEMES[st.theme]||THEMES.red,r=document.documentElement.style;
+  var acc=st.accent||t.accent;
+  var fg=t.fg;
+  if(st.theme==='custom'){fg=acc;}
+  r.setProperty('--bg',t.bg);r.setProperty('--fg',fg);r.setProperty('--accent',acc);
+  r.setProperty('--card',t.card);r.setProperty('--line',t.line);r.setProperty('--onacc',t.onacc);
+  document.body.classList.toggle('light',st.theme==='light');
+  var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.bg;
+}
+function fmt(x,d){return x===null?'-':(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toString();}
+function render(){
+  var s=calcStats(st.counts,st.settings.target);
+  $('cNow').textContent=s.n;$('cTarget').textContent=st.settings.target;
+  var p=st.settings.target>0?Math.min(100,s.n/st.settings.target*100):0;
+  $('pbar').style.width=p+'%';
+  document.body.classList.toggle('done',s.n>=st.settings.target&&st.settings.target>0);
+  $('sAvg').textContent=fmt(s.avg,0);
+  $('sUni').textContent=s.uni===null?'-':fmt(s.uni,0)+'٪';
+  $('sCv').textContent=s.cv===null?'-':fmt(s.cv,1)+'٪';
+  $('sRem').textContent=s.rem;
+  var ks=Object.keys(st.counts).map(Number).sort(function(a,b){return a-b;});
+  var h='';
+  if(!ks.length)h='<div class="empty">لسه مفيش أوزان. اضغط «ابدأ الاستماع» وقول الأوزان بصوت واضح.</div>';
+  ks.forEach(function(w){
+    var c=st.counts[w],ticks='';
+    for(var i=0;i<c;i++)ticks+='<span>✓</span>';
+    h+='<div class="row"><div class="w num">'+w+'</div><div class="t">'+ticks+'</div><div class="c num">'+c+'</div>'+
+       '<button data-w="'+w+'" data-d="-1" aria-label="نقص">−</button><button data-w="'+w+'" data-d="1" aria-label="زود">+</button></div>';
+  });
+  $('list').innerHTML=h;
+}
+function getAC(){
+  var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+  if(!beep.ctx){try{beep.ctx=new AC({latencyHint:'interactive'});}catch(e){beep.ctx=new AC();}}
+  return beep.ctx;
+}
+function beep(bad){
+  try{
+    var c=getAC();if(!c)return;if(c.state==='suspended')c.resume();
+    var t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+    var f=bad?330:2200,d=bad?0.16:0.045;
+    o.type='square';o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.35,t+0.004);
+    g.gain.setValueAtTime(0.35,t+d-0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+0.01);
+  }catch(e){}
+}
+function buzz(){try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
+var toastT;
+function toast(t){var e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(function(){e.style.display='none';},1800);}
+var alertT;
+function alertBad(v){var e=$('alert');e.textContent='الرقم '+v+' خارج جدول الأوزان ولم يتم تسجيله';e.style.display='block';clearTimeout(alertT);alertT=setTimeout(function(){e.style.display='none';},4500);
+  try{if(navigator.vibrate)navigator.vibrate([80,60,80]);}catch(x){}}
+function record(w,quiet){
+  st.counts[w]=(st.counts[w]||0)+1;st.hist.push(w);if(st.hist.length>5000)st.hist.shift();
+  save();render();if(!quiet){beep();buzz();}
+}
+function adjust(w,d){
+  if(d>0){st.counts[w]=(st.counts[w]||0)+1;st.hist.push(w);}
+  else{if(!st.counts[w])return;st.counts[w]--;if(!st.counts[w])delete st.counts[w];
+    var i=st.hist.lastIndexOf(w);if(i>=0)st.hist.splice(i,1);}
+  save();render();buzz();
+}
+function undo(){
+  if(!st.hist.length){toast('مفيش حاجة للتراجع');return;}
+  var w=st.hist.pop();
+  if(st.counts[w]){st.counts[w]--;if(!st.counts[w])delete st.counts[w];}
+  save();render();toast('تم حذف الوزن '+w);
+}
+function stepOk(v,s){return Number.isInteger(v)&&((v-s.min)%s.step===0)&&v>=0;}
+function handleNums(nums){
+  nums.forEach(function(v){
+    if(inTable(v,st.settings))record(v);
+    else if(stepOk(v,st.settings)&&v>st.settings.max&&v<=st.settings.max+st.settings.step*10)askRange(v);
+    else{alertBad(v);beep(true);}
+  });
+}
+function handleText(txt){handleNums(parseNumbers(txt));}
+/* Count integrity: the first (best) reading is the only one recorded automatically.
+   If other readings disagree and the engine is not confident, nothing is recorded
+   until he taps the right one. */
+function sameList(a,b){return a.length===b.length&&a.every(function(x,i){return x===b[i];});}
+function handleResult(res){
+  var top=res[0],nums=parseNumbers(top.transcript),dis=[];
+  for(var k=1;k<res.length;k++){
+    var n=parseNumbers(res[k].transcript);
+    if(n.length&&!sameList(n,nums)&&!dis.some(function(d){return sameList(d,n);}))dis.push(n);
+  }
+  var conf=(typeof top.confidence==='number')?top.confidence:0;
+  if(!nums.length)return;
+  if(dis.length&&conf<0.85){askPick([nums].concat(dis).slice(0,3),top.transcript);return;}
+  handleNums(nums);
+}
+var askT;
+function askBox(html){var e=$('ask');e.innerHTML=html;e.style.display='block';clearTimeout(askT);askT=setTimeout(function(){e.style.display='none';},12000);beep(true);buzz();}
+function askClose(){$('ask').style.display='none';clearTimeout(askT);}
+var askData=null;
+function askRange(v){
+  askData={kind:'range',v:v};
+  askBox('<div>سمعت <b>'+v+'</b> وده أعلى من آخر وزن في الجدول ('+st.settings.max+'). أوسّع الجدول لحد '+v+' وأسجّله؟</div><div class="ab"><button data-a="yes" class="pri">وسّع وسجّل</button><button data-a="no">لا</button></div>');
+}
+function askPick(opts,heard){
+  askData={kind:'pick',opts:opts};
+  var h='<div>مش متأكد من اللي سمعته ('+heard+'). اختار الصح (مفيش حاجة اتسجلت):</div><div class="ab">';
+  opts.forEach(function(o,i){h+='<button data-a="'+i+'">'+o.join(' + ')+'</button>';});
+  askBox(h+'<button data-a="no">تجاهل</button></div>');
+}
+$('ask').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b||!askData)return;
+  var a=b.dataset.a,d=askData;askData=null;askClose();
+  if(a==='no')return;
+  if(d.kind==='range'){st.settings.max=d.v;save();render();record(d.v);toast('اتوسّع الجدول لحد '+d.v);}
+  else if(d.kind==='pick'){handleNums(d.opts[+a]);}
+});
+$('list').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  adjust(+b.dataset.w,+b.dataset.d);
+});
+
+/* speech */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var mode='online',want=false,rec=null,wl=null,fails=0,lastStart=0;
+function showMsg(t){var e=$('msg');if(t){e.innerHTML=t;e.style.display='block';}else{e.style.display='none';}}
+function setUI(){
+  var b=$('go');b.textContent=want?'إيقاف الاستماع':'ابدأ الاستماع';b.classList.toggle('on',want);
+}
+async function lock(){
+  try{if(navigator.wakeLock&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',function(){wl=null;});}}catch(e){wl=null;}
+}
+function unlock(){try{if(wl){wl.release();}}catch(e){}wl=null;}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&want)lock();});
+function stopAll(){want=false;try{if(rec){rec.onend=null;rec.stop();}}catch(e){}rec=null;unlock();setUI();$('live').textContent='';}
+function fatal(t){stopAll();showMsg(t);}
+function makeRec(){
+  var r=new SR();
+  r.lang='ar-EG';if(mode==='device'){try{r.processLocally=true;}catch(e){}}r.continuous=true;r.interimResults=true;r.maxAlternatives=4;
+  r.onstart=function(){lastStart=Date.now();showMsg('');};
+  r.onresult=function(e){
+    var interim='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      var res=e.results[i],tx=res[0].transcript;
+      if(res.isFinal){handleResult(res);$('live').textContent='سمعت: '+tx;}
+      else interim+=tx;
+    }
+    if(interim)$('live').textContent='بسمع: '+interim;
+  };
+  r.onerror=function(e){
+    var er=e.error;
+    if(er==='service-not-allowed'&&mode==='device'){
+      if(navigator.onLine){mode='online';setMode();try{rec.onend=null;}catch(x){}setTimeout(function(){if(want)startRec();},300);}
+      else fatal('<b>حزمة التعرف بدون إنترنت مش متنزلة على الجهاز.</b><br>اتصل بالإنترنت مرة واحدة واضغط «ابدأ الاستماع» عشان تتنزل الحزمة، وبعدها تشتغل بدون إنترنت. لحد وقتها تقدر تضيف الأوزان بالكتابة.');
+    }else if(er==='not-allowed'||er==='service-not-allowed'){
+      fatal('<b>الميكروفون مقفول.</b><br>الصفحة محتاجة إذن الميكروفون. اضغط على أيقونة القفل جنب عنوان الصفحة في كروم، اختار «الأذونات» أو «إعدادات الموقع»، فعّل الميكروفون، وبعدين ارجع واضغط «ابدأ الاستماع». لو الصفحة مفتوحة من ملف على الجهاز، افتحها من رابط الموقع.');
+    }else if(er==='audio-capture'){
+      fatal('<b>مش لاقي ميكروفون شغال.</b><br>اتأكد إن الميكروفون شغال ومفيش تطبيق تاني بيستخدمه، وبعدين جرب تاني.');
+    }else if(er==='network'){
+      if(!navigator.onLine)netMsg();else{fails++;if(fails>=3)netMsg();}
+    }else if(er==='language-not-supported'){
+      fatal('<b>اللغة العربية المصرية مش مدعومة في المتصفح ده.</b><br>حدّث كروم وخدمات جوجل من متجر التطبيقات وجرب تاني.');
+    }
+  };
+  r.onend=function(){
+    if(!want)return;
+    var gap=Date.now()-lastStart<1200?700:150;
+    setTimeout(function(){if(want)startRec();},gap);
+  };
+  return r;
+}
+function netMsg(){fatal('<b>مفيش إنترنت.</b><br>التعرف بدون إنترنت مش متاح على الجهاز ده أو الحزمة لسه متنزلتش (لازم تتنزل مرة واحدة بإنترنت). اتأكد من الواي فاي أو الداتا وبعدين اضغط «ابدأ الاستماع» تاني. الأوزان اللي اتسجلت محفوظة ومش هتضيع.');}
+var micTrack=null;
+function getTrack(){
+  if(micTrack&&micTrack.readyState==='live')return Promise.resolve(micTrack);
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return Promise.resolve(null);
+  return navigator.mediaDevices.getUserMedia({audio:{noiseSuppression:true,echoCancellation:true,autoGainControl:true,channelCount:1}})
+    .then(function(s){micTrack=s.getAudioTracks()[0];return micTrack;}).catch(function(){return null;});
+}
+function startRec(){
+  try{
+    rec=makeRec();
+    var started=false;
+    if(micTrack&&micTrack.readyState==='live'){try{rec.start(micTrack);started=true;}catch(e){micTrack=null;started=false;}}
+    if(!started)rec.start();
+  }catch(e){setTimeout(function(){if(want)startRec();},800);}
+}
+$('go').onclick=function(){
+  try{var c=getAC();if(c&&c.state==='suspended')c.resume();}catch(e){}
+  if(want){stopAll();return;}
+  if(!SR){showMsg('<b>المتصفح ده مش بيدعم التعرف على الصوت.</b><br>افتح الصفحة في متصفح كروم على أندرويد (مش من داخل تطبيق تاني). تقدر تضيف الأوزان بالكتابة بزر «إضافة وزن».');return;}
+  showMsg('');fails=0;
+  chooseMode().then(function(m){
+    if(!m){return;}
+    mode=m;setMode();want=true;setUI();lock();try{beep();}catch(e){}
+    getTrack().then(function(){if(want)startRec();});
+  });
+};
+function setMode(){
+  var t=mode==='device'?'أوفلاين (على الجهاز)':'أونلاين';
+  $('mode').textContent='طريقة التعرف: '+t+(st.prefer?' (مثبّتة)':' (تلقائي)');
+}
+$('mode').onclick=function(){
+  if(want){toast('أوقف الاستماع الأول');return;}
+  st.prefer=st.prefer==='online'?null:'online';save();
+  toast(st.prefer==='online'?'هيستخدم الأونلاين لما يكون فيه إنترنت':'تلقائي: أوفلاين أولًا لو متاح');
+  mode=st.prefer==='online'?'online':mode;setMode();
+};
+async function chooseMode(){
+  var on=navigator.onLine,dev=false;
+  if(st.prefer==='online'&&on)return 'online';
+  try{
+    if(SR.available){
+      var a=await SR.available({langs:['ar-EG'],processLocally:true});
+      if(a==='downloadable'||a==='downloading'){
+        if(on&&SR.install){
+          showMsg('جاري تنزيل حزمة اللغة العربية للتعرف بدون إنترنت. مرة واحدة بس. ممكن ياخد دقيقة.');
+          var ok=false;try{ok=await SR.install({langs:['ar-EG'],processLocally:true});}catch(e){ok=false;}
+          showMsg('');
+          if(ok)dev=true;
+        }
+      }else if(a==='available')dev=true;
+    }
+  }catch(e){dev=false;}
+  if(dev)return 'device';
+  if(on)return 'online';
+  netMsg();return null;
+}
+window.addEventListener('offline',function(){if(want&&mode==='online')netMsg();});
+
+/* buttons */
+function open(id){$(id).classList.add('show');}
+function close(id){$(id).classList.remove('show');}
+$('bUndo').onclick=undo;
+$('bAdd').onclick=function(){$('iAdd').value='';open('mAdd');setTimeout(function(){$('iAdd').focus();},100);};
+$('addCancel').onclick=function(){close('mAdd');};
+$('addOk').onclick=function(){
+  var v=parseInt(normText($('iAdd').value),10);
+  if(!v){close('mAdd');return;}
+  if(!inTable(v,st.settings)){alertBad(v);return;}
+  record(v);close('mAdd');
+};
+$('iAdd').addEventListener('keydown',function(e){if(e.key==='Enter')$('addOk').click();});
+$('bReset').onclick=function(){open('mReset');};
+$('resCancel').onclick=function(){close('mReset');};
+$('resOk').onclick=function(){st.counts={};st.hist=[];save();render();close('mReset');toast('تم التصفير');};
+$('bSet').onclick=function(){var s=st.settings;$('iMin').value=s.min;$('iMax').value=s.max;$('iStep').value=s.step;$('iTarget').value=s.target;open('mSet');};
+$('setCancel').onclick=function(){close('mSet');};
+$('setOk').onclick=function(){
+  var mn=parseInt($('iMin').value,10),mx=parseInt($('iMax').value,10),sp=parseInt($('iStep').value,10),tg=parseInt($('iTarget').value,10);
+  if(!(mn>=0)||!(mx>mn)||!(sp>0)||!(tg>0)){toast('راجع الأرقام: الأعلى لازم يكون أكبر من الأقل');return;}
+  st.settings={min:mn,max:mx,step:sp,target:tg};save();render();close('mSet');toast('تم الحفظ');
+};
+$('bCopy').onclick=function(){
+  var s=calcStats(st.counts,st.settings.target);
+  var ks=Object.keys(st.counts).map(Number).sort(function(a,b){return a-b;});
+  var L=['نتيجة الوزن','العدد: '+s.n+' من '+st.settings.target];
+  if(s.n){L.push('المتوسط: '+fmt(s.avg,0));L.push('التجانس: '+fmt(s.uni,0)+'٪');L.push('معامل الاختلاف: '+fmt(s.cv,1)+'٪');}
+  L.push('المتبقي: '+s.rem,'','الوزن : العدد');
+  ks.forEach(function(w){L.push(w+' : '+st.counts[w]);});
+  var txt=L.join('\n');
+  function fb(){var a=document.createElement('textarea');a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('تم النسخ');}catch(e){toast('تعذر النسخ');}document.body.removeChild(a);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('تم النسخ');},fb);}else fb();
+};
+/* themes */
+function buildSw(){
+  var h='';
+  Object.keys(THEMES).forEach(function(k){var t=THEMES[k];
+    var acc=(k==='custom'&&st.accent)?st.accent:t.accent;
+    h+='<button data-k="'+k+'" class="'+(st.theme===k?'sel':'')+'" style="background:'+t.bg+';color:'+(k==='custom'?acc:t.fg)+';border-color:'+acc+'">'+t.n+'</button>';});
+  $('swatches').innerHTML=h;
+}
+$('bTheme').onclick=function(){buildSw();$('iColor').value=st.accent||THEMES[st.theme].accent;open('mTheme');};
+$('swatches').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;st.theme=b.dataset.k;if(st.theme!=='custom')st.accent=null;save();applyTheme();buildSw();$('iColor').value=st.accent||THEMES[st.theme].accent;});
+$('iColor').addEventListener('input',function(){st.accent=this.value;if(st.theme!=='custom'&&st.theme!=='light')st.theme='custom';save();applyTheme();buildSw();});
+$('themeOk').onclick=function(){close('mTheme');};
+
+
+/* tasbih */
+var draft={},tstep=20;
+function tRange(){var a=parseInt(normText($('tFrom').value),10),b=parseInt(normText($('tTo').value),10);return [a,b];}
+function tWeights(){var r=tRange(),a=r[0],b=r[1],o=[];if(!(a>=0)||!(b>=a))return o;for(var w=a;w<=b&&o.length<500;w+=tstep)o.push(w);return o;}
+function tTotal(){var n=0;for(var k in draft)n+=draft[k];return n;}
+function tBuild(){
+  var ws=tWeights(),h='';
+  var L=document.body.classList.contains('light')?45:58;
+  var groups=[],gi={};
+  ws.forEach(function(w){var g=Math.floor(w/100);if(!(g in gi)){gi[g]=groups.length;groups.push([]);}groups[gi[g]].push(w);});
+  var m=1;groups.forEach(function(g){if(g.length>m)m=g.length;});
+  var cols=Math.max(1,Math.ceil(groups.length/2));
+  var tb=$('tBody');
+  tb.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  tb.style.gridTemplateRows=groups.length>1?'repeat('+m+',1fr) 10px repeat('+m+',1fr)':'repeat('+m+',1fr)';
+  groups.forEach(function(g,k){var col=Math.floor(k/2)+1,off=k%2?m+1:0;
+    g.forEach(function(w,j){var c=draft[w]||0,sty=' style="grid-column:'+col+';grid-row:'+(off+j+1);
+      var cls='tcell'+(c?' on':'');
+      if(w%100===0){var hue=((w/100-1)*33)%360;cls+=' hun';sty+=';--hf:hsl('+hue+' 85% '+L+'%)';}
+      sty+='"';
+      h+='<div class="'+cls+'" data-w="'+w+'"'+sty+'><span class="w num">'+w+'</span><span class="c num">'+c+'</span><button class="mn" data-d="-1" aria-label="نقص">−</button></div>';});});
+  if(!ws.length)h='<div class="empty">اكتب أقل وزن وأعلى وزن.</div>';
+  tb.innerHTML=h;tUpd();
+}
+function tUpd(){$('tTot').textContent=tTotal();$('tTgt').textContent=st.settings.target;}
+function tOpen(){
+  draft={};for(var k in st.counts)draft[k]=st.counts[k];
+  tstep=st.settings.step>0?st.settings.step:20;
+  $('tFrom').value=st.settings.min;$('tTo').value=st.settings.max;
+  tBuild();$('tas').classList.add('show');
+}
+$('bTas').onclick=tOpen;
+$('tFrom').addEventListener('change',tBuild);$('tTo').addEventListener('change',tBuild);
+$('tBody').addEventListener('click',function(e){
+  var row=e.target.closest('.tcell');if(!row)return;var b=e.target.closest('button');
+  var w=+row.dataset.w,d=b?-1:1;
+  var c=(draft[w]||0)+d;if(c<0)return;
+  if(c)draft[w]=c;else delete draft[w];
+  row.querySelector('.c').textContent=c;row.classList.toggle('on',c>0);tUpd();buzz();
+});
+$('tBack').onclick=function(){$('tas').classList.remove('show');};
+$('tDone').onclick=function(){
+  var r=tRange();
+  /* keep range in settings if valid */
+  if(r[0]>=0&&r[1]>r[0]){st.settings.min=r[0];st.settings.max=r[1];}
+  Object.keys(draft).forEach(function(k){var w=+k;if(!isFinite(w))delete draft[k];});
+  var all={};Object.keys(st.counts).forEach(function(k){all[k]=1;});Object.keys(draft).forEach(function(k){all[k]=1;});
+  Object.keys(all).forEach(function(k){
+    var w=+k,old=st.counts[w]||0,nw=draft[w]||0,i;
+    for(i=old;i<nw;i++)st.hist.push(w);
+    for(i=old;i>nw;i--){var j=st.hist.lastIndexOf(w);if(j>=0)st.hist.splice(j,1);}
+  });
+  st.counts={};Object.keys(draft).forEach(function(k){if(draft[k]>0)st.counts[+k]=draft[k];});
+  save();render();
+  var s=calcStats(st.counts,st.settings.target);
+  $('sumBody').innerHTML=
+   '<div class="sumr"><span>العدد</span><b class="num">'+s.n+' من '+st.settings.target+'</b></div>'+
+   '<div class="sumr"><span>المتوسط</span><b class="num">'+fmt(s.avg,0)+'</b></div>'+
+   '<div class="sumr"><span>التجانس ±١٠٪</span><b class="num">'+(s.uni===null?'-':fmt(s.uni,0)+'٪')+'</b></div>'+
+   '<div class="sumr"><span>معامل الاختلاف</span><b class="num">'+(s.cv===null?'-':fmt(s.cv,1)+'٪')+'</b></div>'+
+   '<div class="sumr"><span>المتبقي</span><b class="num">'+s.rem+'</b></div>';
+  $('tas').classList.remove('show');open('mSum');
+};
+$('sumOk').onclick=function(){close('mSum');};
+
+applyTheme();render();setUI();setMode();
+if(!SR)showMsg('<b>المتصفح ده مش بيدعم التعرف على الصوت.</b><br>افتح الصفحة في متصفح كروم على أندرويد. تقدر تضيف الأوزان بالكتابة بزر «إضافة وزن».');
+window.__app={st:st,handleText:handleText,render:render};
+})();
+</script>
+</body>
+</html>
