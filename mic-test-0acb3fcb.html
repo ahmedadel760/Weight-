@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>اختبار المايك</title>
+<style>body{background:#000;color:#e8f5e8;font:18px Tahoma,Arial,sans-serif;margin:0;padding:12px}button{display:block;width:100%;min-height:56px;margin:8px 0;font-size:19px;border-radius:14px;border:1px solid #4cd37b;background:#10200f;color:#e8f5e8}button.on{background:#b8f23a;color:#000}#log{white-space:pre-wrap;direction:ltr;text-align:left;font:14px monospace;background:#0b130b;border:1px solid #2a3a2a;border-radius:12px;padding:10px;min-height:200px;margin-top:10px}</style></head><body>
+<h3>اختبار المايك (3 طرق)</h3>
+<p style="font-size:15px;opacity:.85">دوس على زر واحد، قول «سبعمية» بصوت واضح، استنى 5 ثواني، ودوس إيقاف. بعدين صوّر الشاشة وابعتها. كرر مع كل زر.</p>
+<button id="a">1) عادي (أونلاين)</button>
+<button id="b">2) أونلاين مع مسار المايك</button>
+<button id="c">3) على الجهاز (أوفلاين)</button>
+<button id="s">إيقاف</button>
+<div id="log"></div>
+<script>
+var L=document.getElementById('log'),rec=null,t0=0;
+function p(m){L.textContent+=((Date.now()-t0)/1000).toFixed(1)+'s '+m+'\n';}
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+L.textContent='UA: '+navigator.userAgent+'\nSR: '+(SR?'yes':'NO')+'\nonLine: '+navigator.onLine+'\n\n';
+function run(mode){
+  if(rec){try{rec.abort()}catch(e){}}
+  L.textContent+='\n--- '+mode+' ---\n';t0=Date.now();
+  if(!SR){p('no SpeechRecognition');return;}
+  function go(track){
+    var r=new SR();rec=r;r.lang='ar-EG';r.continuous=true;r.interimResults=true;r.maxAlternatives=4;
+    if(mode==='device'){try{r.processLocally=true;p('processLocally set')}catch(e){p('processLocally fail '+e)}}
+    ['start','audiostart','soundstart','speechstart','speechend','soundend','audioend','end','nomatch'].forEach(function(n){r['on'+n]=function(){p('event: '+n)}});
+    r.onerror=function(e){p('ERROR: '+e.error+' '+(e.message||''))};
+    r.onresult=function(e){for(var i=e.resultIndex;i<e.results.length;i++){var x=e.results[i];p((x.isFinal?'FINAL: ':'interim: ')+x[0].transcript+' (conf '+(x[0].confidence||0).toFixed(2)+')');}};
+    try{track?r.start(track):r.start();p('start() called'+(track?' with track':''));}catch(e){p('start threw: '+e)}
+  }
+  if(mode==='track'){
+    navigator.mediaDevices.getUserMedia({audio:{noiseSuppression:true,echoCancellation:true,autoGainControl:true,channelCount:1}}).then(function(s){p('mic track ok: '+s.getAudioTracks()[0].readyState);go(s.getAudioTracks()[0]);}).catch(function(e){p('getUserMedia failed: '+e)});
+  }else go(null);
+}
+a.onclick=function(){run('plain')};b.onclick=function(){run('track')};c.onclick=function(){run('device')};
+s.onclick=function(){if(rec){try{rec.stop()}catch(e){}p('stop pressed')}};
+</script></body></html>
